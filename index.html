@@ -10,17 +10,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{--bg:#eef2f7;--card:#fff;--soft:#f1f5f9;--line:#dbe3ec;--edge:#e2e8f0;--faint:#cbd5e1;
+html{--bg:#eef2f7;--card:#fff;--soft:#f1f5f9;--line:#dbe3ec;--edge:#e2e8f0;--faint:#8c9cb0;
   --tx:#16202a;--mut:#64748b;--br:#0e7490;--br2:#0891b2;--acc:#14b8a6;
   --pass:#15803d;--passbg:#dcfce7;--fail:#dc2626;--failbg:#fee2e2;--warn:#b45309;--warnbg:#fef3c7;
   --c-low:#e39b97;--c-ok:#9ccbb3;--c-hi:#ecd3a0;--c-none:#e5eaf1;
+  --onbr:#fff;--onpass:#fff;--hdtx:#fff;--hdbg:linear-gradient(135deg,#0e7490,#0f766e);
   --navbg:rgba(255,255,255,.95);--ovlbg:#fff;--tip:#16202a;--tiptx:#fff;
   --sh:0 1px 2px rgba(16,32,48,.06),0 1px 8px rgba(16,32,48,.05);color-scheme:light}
 html[data-theme="dark"],
-html[data-theme="auto"].dk{--bg:#0b1220;--card:#131f31;--soft:#1b2a3f;--line:#24364f;--edge:#223147;--faint:#52657f;
+html[data-theme="auto"].dk{--bg:#0b1220;--card:#131f31;--soft:#1b2a3f;--line:#24364f;--edge:#223147;--faint:#7589a3;
   --tx:#e8eff7;--mut:#93a7bf;--br:#22d3ee;--br2:#38bdf8;--acc:#2dd4bf;
   --pass:#4ade80;--passbg:#0b3a24;--fail:#f87171;--failbg:#45161a;--warn:#fbbf24;--warnbg:#402d08;
   --c-low:#9e5351;--c-ok:#47836a;--c-hi:#8a6c3c;--c-none:#22314a;
+  --onbr:#06222b;--onpass:#05230f;--hdtx:#eaf6fa;--hdbg:linear-gradient(135deg,#0b3a4a,#0d3f3c);
   --navbg:rgba(19,31,49,.95);--ovlbg:#0f1a2b;--tip:#e8eff7;--tiptx:#0b1220;
   --sh:0 1px 2px rgba(0,0,0,.3),0 1px 10px rgba(0,0,0,.25);color-scheme:dark}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);
@@ -30,13 +32,12 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--tx);
 button{font-family:inherit;font-size:inherit;color:inherit;background:none;border:0;cursor:pointer}
 input,select,textarea{font-family:inherit;font-size:inherit;color:var(--tx);background:var(--card);border-color:var(--line)}
 input::placeholder,textarea::placeholder{color:var(--faint)}
-.hd{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,var(--br),#0f766e);color:#fff;padding:10px 14px 12px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-html[data-theme="dark"] .hd,html[data-theme="auto"].dk .hd{background:linear-gradient(135deg,#0b3a4a,#0d3f3c);color:#eaf6fa}
+.hd{position:sticky;top:0;z-index:20;background:var(--hdbg);color:var(--hdtx);padding:10px 14px 12px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .hd h1{margin:0;font-size:clamp(.98rem,3.4vw,1.15rem);font-weight:700}
 .hd .sub{font-size:.75rem;opacity:.88;margin-top:1px}
 .hdrow{display:flex;align-items:center;gap:8px}
 .hdrow .grow{flex:1;min-width:0}
-.ysel,.thbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:7px 10px;font-size:.88rem;font-weight:700}
+.ysel,.thbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:var(--hdtx);border-radius:10px;padding:7px 10px;font-size:.88rem;font-weight:700}
 .thbtn{padding:7px 9px}
 .ysel option{color:#111;background:#fff}
 .chip{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--mut);white-space:nowrap}
@@ -58,7 +59,7 @@ html[data-theme="dark"] .hd,html[data-theme="auto"].dk .hd{background:linear-gra
 .tog{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
 .tog::-webkit-scrollbar{display:none}
 .tog button{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:.82rem;white-space:nowrap;box-shadow:var(--sh)}
-.tog button.on{background:var(--br);color:var(--card);border-color:var(--br);font-weight:700}
+.tog button.on{background:var(--br);color:var(--onbr);border-color:var(--br);font-weight:700}
 .secrow{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);width:100%;text-align:left}
 .secrow:last-child{border-bottom:0}
 .secrow .nm{flex:1;min-width:0;font-size:.92rem;font-weight:600}
@@ -76,10 +77,9 @@ html[data-theme="dark"] .hd,html[data-theme="auto"].dk .hd{background:linear-gra
 .prow .val{flex:0 0 78px;text-align:right}
 .prow .val b{font-size:1.08rem;display:block;line-height:1.1}
 .prow .val s{display:block;font-size:.65rem;color:var(--mut);text-decoration:none}
-.vp{color:var(--pass)}.vf{color:var(--fail)}.vn{color:var(--faint)}
-.btn{display:block;width:100%;background:var(--br);color:#fff;border-radius:13px;padding:14px;font-weight:700;text-align:center;box-shadow:var(--sh)}
-html[data-theme="dark"] .btn,html[data-theme="auto"].dk .btn{color:#06222b}
-.btn.g{background:var(--pass)}
+.vp{color:var(--pass)}.vf{color:var(--fail)}.vn{color:var(--mut)}
+.btn{display:block;width:100%;background:var(--br);color:var(--onbr);border-radius:13px;padding:14px;font-weight:700;text-align:center;box-shadow:var(--sh)}
+.btn.g{background:var(--pass);color:var(--onpass)}
 .btn.o{background:var(--card);color:var(--br);border:1px solid var(--line)}
 .btn.r{background:var(--card);color:var(--fail);border:1px solid var(--line)}
 .btn:active{transform:scale(.985)}
@@ -91,12 +91,11 @@ html[data-theme="dark"] .btn,html[data-theme="auto"].dk .btn{color:#06222b}
 .nav button b{display:block;font-size:1.15rem;line-height:1.3;font-weight:400}
 .nav button.on{color:var(--br);font-weight:700}
 .ovl{position:fixed;inset:0;z-index:50;background:var(--ovlbg);display:flex;flex-direction:column;max-width:620px;margin:0 auto}
-.ovl .top{background:linear-gradient(135deg,var(--br),#0f766e);color:#fff;padding:9px 12px}
-html[data-theme="dark"] .ovl .top,html[data-theme="auto"].dk .ovl .top{background:linear-gradient(135deg,#0b3a4a,#0d3f3c)}
+.ovl .top{background:var(--hdbg);color:var(--hdtx);padding:9px 12px}
 .ovl .top .r1{display:flex;align-items:center;gap:8px;font-size:.78rem;opacity:.92}
 .ovl .top h2{margin:3px 0 0;font-size:1rem;font-weight:700;line-height:1.3}
 .ovl .top .r2{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.ovl .top .chip{background:rgba(255,255,255,.2);color:#fff}
+.ovl .top .chip{background:rgba(255,255,255,.2);color:var(--hdtx)}
 .disp{padding:10px 14px 6px;text-align:center;border-bottom:1px solid var(--line)}
 .disp .big{font-size:clamp(2.3rem,11vw,3rem);font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
 .disp .u{font-size:1rem;font-weight:600;color:var(--mut);margin-left:4px}
@@ -106,20 +105,19 @@ html[data-theme="dark"] .ovl .top,html[data-theme="auto"].dk .ovl .top{backgroun
 .stat{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .stat::-webkit-scrollbar{display:none}
 .stat button{border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:.8rem;white-space:nowrap;background:var(--soft)}
-.stat button.on{background:var(--br);color:var(--card);border-color:var(--br);font-weight:700}
-.stat button.on.rm{background:var(--fail);border-color:var(--fail)}
+.stat button.on{background:var(--br);color:var(--onbr);border-color:var(--br);font-weight:700}
+.stat button.on.rm{background:var(--fail);border-color:var(--fail);color:var(--onpass)}
 .nt{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--soft)}
 .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .keys button{background:var(--soft);border:1px solid var(--line);border-radius:12px;font-size:1.5rem;font-weight:600;
   height:clamp(48px,7.6vh,60px);display:grid;place-items:center;font-variant-numeric:tabular-nums}
-.keys button:active{background:var(--br);color:var(--card)}
+.keys button:active{background:var(--br);color:var(--onbr)}
 .keys button.sm{font-size:1.05rem}
 .go{display:flex;gap:7px;align-items:stretch}
 .go .arr{flex:0 0 52px;background:var(--soft);border:1px solid var(--line);border-radius:12px;font-size:1.3rem;display:grid;place-items:center}
-.go .mainb{flex:1;background:var(--pass);color:#fff;border-radius:12px;font-weight:700;font-size:1rem;padding:13px 8px}
-html[data-theme="dark"] .go .mainb,html[data-theme="auto"].dk .go .mainb{color:#05230f}
+.go .mainb{flex:1;background:var(--pass);color:var(--onpass);border-radius:12px;font-weight:700;font-size:1rem;padding:13px 8px}
 .go .mainb small{display:block;font-weight:400;font-size:.7rem;opacity:.9}
-.x{font-size:1.5rem;line-height:1;padding:2px 8px;color:#fff}
+.x{font-size:1.5rem;line-height:1;padding:2px 8px;color:var(--hdtx)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:90;background:var(--tip);color:var(--tiptx);
   padding:9px 15px;border-radius:999px;font-size:.84rem;box-shadow:0 4px 16px rgba(0,0,0,.3);opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:.97}
@@ -131,7 +129,7 @@ html[data-theme="dark"] .go .mainb,html[data-theme="auto"].dk .go .mainb{color:#
 .row .grow{flex:1;min-width:0;font-size:.92rem;font-weight:600}
 .stp{display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--card)}
 .stp button{width:40px;height:44px;font-size:1.25rem;font-weight:700;color:var(--br);background:var(--soft)}
-.stp button:active{background:var(--br);color:var(--card)}
+.stp button:active{background:var(--br);color:var(--onbr)}
 .stp input.n{width:72px;height:44px;text-align:center;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);
   background:var(--card);font-size:1rem;font-weight:700;font-variant-numeric:tabular-nums;padding:0}
 .lx{font-size:.74rem;color:var(--mut);width:24px}
@@ -207,9 +205,10 @@ const LS='sansai_lux_v1';
 const SHEET={id:'',main:'สรุปปีปัจจุบัน',log:'LOG'};
 
 const S={
-  year:SEED.CUR, view:'home', tab:'overview', secIdx:null, q:'', q2:'', q3:'', filter:'all', bfilter:null,
+  year:SEED.CUR, view:'home', secIdx:null, q:'', q2:'', q3:'', filter:'all',
   readings:{}, prev:{}, custom:{}, edits:{}, std:Object.assign({},SEED.STD),
   rounds:{}, names:{}, db:null, user:null, dl:null, mcp:null, uid:null, sfilter:null, unitAll:false,
+  visits:null, localVisit:{count:0,first:'',last:''},
   entry:null, queue:[], logq:[], loading:true, theme:'auto', sheet:Object.assign({},SHEET), autosync:true,
   pin:'0000', unlocked:false, gate:null, syncing:false, lastSync:''
 };
@@ -300,7 +299,7 @@ function histStats(key){
 /* ---------- db ---------- */
 const CL=(typeof window!=='undefined'&&window.claude&&typeof window.claude.use==='function')?window.claude:null;
 async function boot(){
-  loadMirror(); render();
+  loadMirror(); bumpLocalVisit(); render();
   let u=null,db=null;
   if(CL){
     try{ u=await CL.use('user') }catch(e){}
@@ -317,6 +316,8 @@ async function boot(){
   db.collection('custompoints').onSnapshot(s=>{ S.custom={}; s.docs.forEach(d=>S.custom[d.id]=d.data()); _ck=''; render() },()=>{});
   db.collection('pointedits').onSnapshot(s=>{ S.edits={}; s.docs.forEach(d=>S.edits[d.id]=d.data()); _ck=''; render() },()=>{});
   db.collection('rounds').onSnapshot(s=>{ S.rounds={}; s.docs.forEach(d=>S.rounds[d.id]=d.data()); render() },()=>{});
+  db.collection('visits').onSnapshot(s=>{ S.visits=s.docs.map(d=>d.data()||{}); render() },()=>{});
+  trackVisit();
   db.doc('settings/security').onSnapshot(d=>{ const v=d.data(); if(v&&v.pin){ S.pin=String(v.pin); try{localStorage.setItem(LS+'_pin',S.pin)}catch(e){} } },()=>{});
   db.doc('settings/sheets').onSnapshot(d=>{ const v=d.data(); if(v&&v.id){ S.sheet=Object.assign({},SHEET,v); try{localStorage.setItem(LS+'_sheet',JSON.stringify(S.sheet))}catch(e){} render() } },()=>{});
   db.doc('settings/standards').onSnapshot(d=>{ const v=d.data(); if(v&&v.map){ S.std=Object.assign({},SEED.STD,v.map); _ck='';
@@ -364,6 +365,57 @@ async function flush(){
     try{ await S.db.doc(path).set(it.body); S.queue=S.queue.filter(x=>x!==it) }catch(e){ break }
   }
   mirror(); render();
+}
+/* ---------- ตัวนับผู้เข้าใช้ ---------- */
+const VISIT_GAP=30*60*1000;   // เข้าใหม่อีกครั้งหลังเว้นเกิน 30 นาที = นับเพิ่ม 1
+function bumpLocalVisit(){
+  let v={count:0,first:'',last:'',lastMs:0};
+  try{ const s=localStorage.getItem(LS+'_visit'); if(s) v=Object.assign(v,JSON.parse(s)||{}) }catch(e){}
+  const now=Date.now();
+  if(now-(v.lastMs||0)>=VISIT_GAP){
+    v.count=(v.count||0)+1; v.first=v.first||new Date().toISOString();
+    v.last=new Date().toISOString(); v.lastMs=now;
+    try{ localStorage.setItem(LS+'_visit',JSON.stringify(v)) }catch(e){}
+  }
+  S.localVisit=v;
+}
+async function trackVisit(){
+  if(!S.db||!S.uid) return;
+  const ref=S.db.doc('visits/'+S.uid);
+  let cur=null;
+  try{ const d=await ref.get(); cur=d.exists?d.data():null }catch(e){ return }
+  const now=Date.now();
+  if(cur&&now-(cur.lastMs||0)<VISIT_GAP) return;
+  const body={count:((cur&&cur.count)||0)+1,first:(cur&&cur.first)||new Date().toISOString(),
+    last:new Date().toISOString(),lastMs:now};
+  try{ await ref.set(body) }catch(e){}
+}
+function visitStats(){
+  if(!S.visits) return {people:0,total:S.localVisit.count||0,today:0,local:true,first:S.localVisit.first};
+  const t0=new Date(); t0.setHours(0,0,0,0);
+  let total=0,today=0,first='';
+  S.visits.forEach(v=>{
+    total+=v.count||0;
+    if(v.last&&new Date(v.last)>=t0) today++;
+    if(v.first&&(!first||v.first<first)) first=v.first;
+  });
+  return {people:S.visits.length,total:total,today:today,local:false,first:first};
+}
+function thDate(iso){
+  if(!iso) return '-';
+  const d=new Date(iso);
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+}
+function visitCard(){
+  const v=visitStats();
+  return '<div class="card pad"><div style="font-weight:700;margin-bottom:6px">จำนวนผู้เข้าใช้บริการระบบ</div>'+
+    '<div class="kpi" style="margin-bottom:0"><div><b>'+v.total.toLocaleString('th-TH')+'</b><span>เข้าใช้ทั้งหมด (ครั้ง)</span></div>'+
+    '<div><b>'+(v.local?'–':v.people.toLocaleString('th-TH'))+'</b><span>ผู้ใช้งาน (คน)</span></div>'+
+    '<div><b>'+(v.local?'–':v.today)+'</b><span>เข้าใช้วันนี้</span></div>'+
+    '<div><b style="font-size:.95rem">'+thDate(v.first)+'</b><span>เริ่มนับตั้งแต่</span></div></div>'+
+    '<div class="sm" style="margin-top:8px">'+(v.local
+      ?'ขณะนี้นับเฉพาะเครื่องนี้ (ยังไม่ได้เชื่อมฐานข้อมูลกลาง)'
+      :'นับสะสมต่อเนื่อง ไม่รีเซ็ตเมื่ออัปเดตระบบ · เข้าใช้ซ้ำภายใน 30 นาทีนับเป็นครั้งเดียว')+'</div></div>';
 }
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2200) }
 
@@ -611,69 +663,6 @@ function unitCard(){
   h+='<div class="sm" style="margin-top:8px">“สูงกว่าช่วง” = เกินช่วงแนะนำของลักษณะงานนั้น (เช่น งานคอมพิวเตอร์ 400–500 Lux) ไม่ถือว่าผิดเกณฑ์ขั้นต่ำ แต่ควรดูเรื่องแสงแยงตาและความสิ้นเปลืองพลังงาน</div>';
   return h+'</div>';
 }
-function vSumBuilding(){
-  const map={};
-  livePoints().forEach(p=>{ const b=bldName(p.secIdx); (map[b]=map[b]||[]).push(p) });
-  const rows=Object.keys(map).map(b=>{ const t=stats(map[b]); return {b:b,t:t} })
-    .sort((a,b)=>(a.t.rate-b.t.rate)||(b.t.fail-a.t.fail));
-  let h='<div class="card pad"><div style="font-weight:700">อัตราผ่านเกณฑ์รายอาคาร/กลุ่มงาน</div>'+
-    '<div class="sm" style="margin-bottom:8px">เรียงจากที่ต้องแก้ไขมากที่สุด · แตะเพื่อดูรายชื่อจุด</div>';
-  rows.forEach(r=>{
-    const t=r.t, un=t.n-t.done;
-    h+='<button class="sb" style="width:100%;text-align:left;display:block" data-act="bld" data-v="'+esc(r.b)+'">'+
-      '<div class="lb"><span>'+esc(r.b)+'</span><b class="'+(t.rate>=80?'vp':t.rate>=60?'':'vf')+'">'+(t.done?t.rate+'%':'ยังไม่วัด')+'</b></div>'+
-      '<div class="tr">'+(t.pass?'<i style="width:'+(t.pass/t.n*100)+'%;background:var(--c-ok)"></i>':'')+
-      (t.fail?'<i style="width:'+(t.fail/t.n*100)+'%;background:var(--c-low)"></i>':'')+
-      (un?'<i style="width:'+(un/t.n*100)+'%;background:var(--c-none)"></i>':'')+'</div>'+
-      '<div class="sm" style="font-size:.68rem">'+t.n+' จุด · ผ่าน '+t.pass+' · ไม่ผ่าน '+t.fail+(un?' · ยังไม่วัด '+un:'')+'</div></button>';
-  });
-  h+='</div>';
-  if(S.bfilter){
-    const ps=livePoints().filter(p=>bldName(p.secIdx)===S.bfilter);
-    h+='<div class="gh">'+esc(S.bfilter)+' — '+ps.length+' จุด <button class="chip" data-act="bld" data-v="">✕ ล้าง</button></div>'+plist(ps,true);
-  }
-  return h;
-}
-function vSumCompare(){
-  const all=livePoints(), rows=[];
-  all.forEach(p=>{ const r=reading(p),pv=prevVal(p);
-    if(r&&r.lux!=null&&pv.v!=null) rows.push({p:p,now:r.lux,was:pv.v,d:r.lux-pv.v,y:pv.y}) });
-  if(!rows.length) return '<div class="card"><div class="empty">ยังไม่มีคู่ข้อมูลให้เทียบ — บันทึกค่าปีนี้ก่อน</div></div>';
-  const down=rows.filter(x=>x.d<0).sort((a,b)=>a.d-b.d).slice(0,10);
-  const up=rows.filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,10);
-  const worse=rows.filter(x=>x.now<x.p.std&&x.was>=x.p.std);
-  const better=rows.filter(x=>x.now>=x.p.std&&x.was<x.p.std);
-  const mx=Math.max(1,...rows.map(x=>Math.abs(x.d)));
-  const blk=(title,list,cls)=>'<div class="card pad"><div style="font-weight:700;margin-bottom:6px">'+title+'</div>'+
-    (list.length?list.map(x=>'<button class="wbar" data-act="open" data-v="'+x.p.pid+'">'+
-      '<span class="n">'+esc(x.p.name)+'<div class="sm" style="font-size:.66rem">'+esc(secName(x.p.secIdx))+'</div></span>'+
-      '<span class="tr"><i style="width:'+(Math.abs(x.d)/mx*100)+'%;background:var(--c-'+(cls==='fail'?'low':'ok')+')"></i></span>'+
-      '<span class="v '+(cls==='fail'?'vf':'vp')+'">'+(x.d>0?'+':'')+Math.round(x.d)+'<div class="sm" style="font-size:.64rem;font-weight:400">'+x.was+'→'+x.now+'</div></span></button>').join('')
-      :'<div class="empty">ไม่มี</div>')+'</div>';
-  let h='<div class="kpi"><div><b>'+rows.length+'</b><span>จุดที่เทียบได้</span></div>'+
-    '<div><b class="vf">'+worse.length+'</b><span>ตกเกณฑ์ปีนี้</span></div>'+
-    '<div><b class="vp">'+better.length+'</b><span>กลับมาผ่าน</span></div>'+
-    '<div><b>'+Math.round(rows.reduce((a,x)=>a+x.d,0)/rows.length)+'</b><span>Lux เฉลี่ยเปลี่ยน</span></div></div>';
-  if(worse.length) h+='<div class="gh">เคยผ่านเมื่อปีก่อน แต่ปีนี้ตกเกณฑ์ ('+worse.length+')</div>'+plist(worse.map(x=>x.p),true);
-  h+=blk('ลดลงมากที่สุด 10 อันดับ',down,'fail');
-  h+=blk('เพิ่มขึ้นมากที่สุด 10 อันดับ',up,'pass');
-  return h;
-}
-function vSumList(){
-  const all=livePoints();
-  const fails=[]; all.forEach(p=>{ const r=reading(p); if(r&&r.lux!=null&&verdict(p,r.lux)==='fail') fails.push([p,r]) });
-  fails.sort((a,b)=>(a[1].lux-a[0].std)-(b[1].lux-b[0].std));
-  let h='<div class="gh">จุดที่ต่ำกว่าเกณฑ์ — เสนอปรับปรุง ('+fails.length+')</div>';
-  h+=fails.length?plist(fails.map(x=>x[0]),true):'<div class="card"><div class="empty">ยังไม่มีจุดที่ต่ำกว่าเกณฑ์</div></div>';
-  const ch=[]; all.forEach(p=>{ const r=reading(p); if(r&&r.status&&r.status!=='ok') ch.push([p,r]) });
-  h+='<div class="gh">การเปลี่ยนแปลงจุด/สถานีงานปีนี้ ('+ch.length+')</div>';
-  if(!ch.length) h+='<div class="card"><div class="empty">ยังไม่มีการบันทึกการเปลี่ยนแปลง</div></div>';
-  else{ h+='<div class="card">'+ch.map(([p,r])=>'<button class="prow" data-act="open" data-v="'+p.pid+'">'+
-    '<span class="mid"><span class="t">'+esc(p.name)+'</span><span class="m"><span class="chip '+(r.status==='removed'?'f':'w')+'">'+STAT[r.status]+'</span>'+
-    (r.loc?'<span class="chip">'+esc(r.loc)+'</span>':'')+(r.note?'<span class="chip">'+esc(r.note)+'</span>':'')+'</span></span>'+
-    '<span class="val">'+(r.lux!=null?'<b>'+r.lux+'</b>':'<b class="vn">–</b>')+'</span></button>').join('')+'</div>' }
-  return h;
-}
 function vSum(){
   const all=livePoints(), st=stats(all);
   let h=header()+'<div class="wrap">';
@@ -685,12 +674,11 @@ function vSum(){
     h+='<div class="gh">ผลค้นหา '+f.length+' จุด</div>'+plist(f,true)+
       '<div class="card pad sm">ในผลค้นหานี้: วัดแล้ว '+fs.done+'/'+fs.n+' · <span class="vp">ผ่าน '+fs.pass+'</span> · <span class="vf">ไม่ผ่าน '+fs.fail+'</span></div>';
   }else{
-    h+='<div class="tog">'+[['overview','ภาพรวม'],['bld','รายอาคาร'],['cmp','เทียบปีก่อน'],['list','รายการ']]
-      .map(x=>'<button data-act="tab" data-v="'+x[0]+'" class="'+(S.tab===x[0]?'on':'')+'">'+x[1]+'</button>').join('')+'</div>';
-    h+=S.tab==='bld'?vSumBuilding():S.tab==='cmp'?vSumCompare():S.tab==='list'?vSumList():vSumOverview();
+    h+=vSumOverview();
   }
   h+='<div class="btn2" style="margin-top:12px"><button class="btn o" data-act="copy">📋 คัดลอก</button><button class="btn o" data-act="csv">⬇ CSV</button>'+
      '<button class="btn o" data-act="sync">'+(S.syncing?'⏳ กำลังส่ง…':'📗 ส่งขึ้นชีต')+'</button></div>';
+  h+=visitCard();
   return h+'</div>'+nav('sum');
 }
 function vSet(){
@@ -720,6 +708,7 @@ function vSet(){
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">รอบการตรวจวัด</div>'+
      '<div class="sm" style="margin-bottom:8px">เปิดรอบปีใหม่ = ยกทะเบียนจุดทั้งหมดมาตั้งต้น แล้วเดินวัดทีละจุด จุดไหนย้าย/ยุบค่อยกดระบุตอนวัด</div>'+
      '<button class="btn o" data-act="newround" data-v="'+nx+'">+ เปิดรอบปี '+nx+'</button></div>';
+  h+=visitCard();
   if(!CL) h+='<div class="card pad sm" style="border-color:var(--warn)">กำลังรันแบบสแตนด์อะโลน (นอกแอป Claude) — บันทึกลงเครื่องนี้เท่านั้น ยังไม่ซิงค์ข้ามเครื่องและยังส่งขึ้น Google Sheets โดยตรงไม่ได้ ใช้ปุ่มคัดลอก/CSV แทนได้</div>';
   h+='<div class="card pad sm">อ้างอิงเกณฑ์เดิมในไฟล์<br>งานหยาบ 200–300 → ซักรีด ซักแห้ง อบ พับผ้า<br>งานละเอียดเล็กน้อย 300–400 → แพ็คของ/อุปกรณ์ เตรียม-ปรุงอาหาร ล้างจาน<br>'+
      'งานละเอียดปานกลาง 400–500 → งานสำนักงาน คอมพิวเตอร์ เอกสาร<br>งานละเอียดมาก 500–600 → หัตถการ จัดยา/เตรียมยา กายอุปกรณ์<br><br>'+
@@ -733,8 +722,8 @@ function nav(a){
 function render(){
   const sc=window.scrollY;
   $('app').innerHTML=S.view==='sec'?vSec():S.view==='sum'?vSum():S.view==='set'?vSet():vHome();
-  if(S.view===S._lv&&S.tab===S._lt) window.scrollTo(0,sc); else window.scrollTo(0,0);
-  S._lv=S.view; S._lt=S.tab;
+  if(S.view===S._lv) window.scrollTo(0,sc); else window.scrollTo(0,0);
+  S._lv=S.view;
   renderEntry();
 }
 
@@ -864,8 +853,6 @@ document.addEventListener('click',ev=>{
   if(a==='nav'){ if(v==='sum'){S.view='sum';S.secIdx=null;S.entry=null;render()} else requireUnlock(()=>{S.view=v;S.secIdx=null;S.entry=null;render()}) }
   else if(a==='sec'){ S.secIdx=+v; S.view='sec'; S.q2=''; render() }
   else if(a==='home'){ S.view='home'; S.secIdx=null; render() }
-  else if(a==='tab'){ S.tab=v; S.bfilter=null; render() }
-  else if(a==='bld'){ S.bfilter=v||null; render() }
   else if(a==='unit'){ S.sfilter=S.sfilter===+v?null:+v; render() }
   else if(a==='unitall'){ S.unitAll=!S.unitAll; render() }
   else if(a==='filter'){ S.filter=v; render() }
