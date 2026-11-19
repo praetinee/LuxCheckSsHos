@@ -37,6 +37,12 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
 .hd .sub{font-size:.75rem;opacity:.88;margin-top:1px}
 .hdrow{display:flex;align-items:center;gap:8px}
 .hdrow .grow{flex:1;min-width:0}
+.wsbtn{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1e293b;border:1px solid #cbd5e1;
+  border-radius:10px;padding:7px 11px;font-size:.86rem;font-weight:600;text-decoration:none;white-space:nowrap;
+  box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.wsbtn:active{background:#eef2f7}
+.wsbtn svg{flex:0 0 16px}
+@media (max-width:480px){ .hidesm{display:none} .wsbtn{padding:7px 9px} }
 .ysel,.thbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:var(--hdtx);border-radius:10px;padding:7px 10px;font-size:.88rem;font-weight:700}
 .thbtn{padding:7px 9px}
 .ysel option{color:#111;background:#fff}
@@ -654,8 +660,11 @@ function header(){
        :(S.db?' · <span class="sync">✓ บันทึกอัตโนมัติ</span>':' · <span class="sync">⚠ เครื่องนี้เท่านั้น</span>')))+
     (!bkOn()&&sheetReady()&&S.logq.length?' · <span class="sync">📗 รอส่งชีต '+S.logq.length+'</span>':'')+'</div></div>'+
     '<button class="thbtn" data-act="'+(S.unlocked?'lock':'unlockbtn')+'" title="'+(S.unlocked?'ล็อกระบบ':'ปลดล็อกเพื่อบันทึกค่า')+'">'+(S.unlocked?'🔓':'🔒')+'</button>'+
-    '<button class="thbtn" data-act="theme" title="สลับธีม">'+ic+'</button>'+
+    '<button class="thbtn hidesm" data-act="theme" title="สลับธีม">'+ic+'</button>'+
     '<select class="ysel" data-act="year">'+yearOpts().map(y=>'<option value="'+y+'"'+(y===S.year?' selected':'')+'>ปี '+y+'</option>').join('')+'</select>'+
+    '<a class="wsbtn" href="https://praetinee.github.io/JanWorkspace/" target="_blank" rel="noopener" title="ไปที่ Workspace">'+
+      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+
+      '<path d="M3 10.2 12 3.2l9 7V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9.6 21v-6.2h4.8V21"/></svg>Workspace</a>'+
     '</div></div>';
 }
 function searchBox(act,val,ph){
