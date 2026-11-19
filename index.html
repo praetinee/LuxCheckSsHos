@@ -842,17 +842,10 @@ function vSet(){
   h+='</div><div>';
   const shLink='https://docs.google.com/spreadsheets/d/'+S.sheet.id+'/edit';
   if(bkOn()){
-    h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">เชื่อม Google Sheets (บันทึกตรง)</div>'+
-      '<div class="sm" style="margin-bottom:8px">'+
-      (S.bkOk===false?'<span style="color:var(--fail)">⚠ ต่อชีตไม่ได้: '+esc(S.bkErr)+'</span><br>ค่าที่กรอกยังเก็บในเครื่องและจะส่งให้เองเมื่อต่อได้'
-        :'✅ กด “บันทึก” แล้วเขียนลงชีตทันที ไม่ต้องลงชื่อเข้าใช้อะไรทั้งสิ้น')+
-      (S.queue.length?'<br>⏳ ค้างส่ง '+S.queue.length+' รายการ':'')+
-      (S.lastLoad?'<br>อ่านข้อมูลล่าสุด '+new Date(S.lastLoad).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.':'')+
-      '<br><a href="'+shLink+'" target="_blank" rel="noopener" style="color:var(--br)">เปิดชีต</a></div>'+
-      '<div class="sm" style="margin-bottom:8px">แท็บ “สรุปปีปัจจุบัน” จะถูกจัดใหม่ให้เองหลังหยุดกรอก 1 นาที และตอนปิดหน้า '+
-      (S.syncing?'· <b>กำลังอัปเดต…</b>':'')+'</div>'+
-      '<div class="btn2"><button class="btn o" data-act="bkcfg">ตั้งค่าการเชื่อมต่อ</button>'+
-      '<button class="btn o" data-act="sync">อัปเดตตารางสรุปเดี๋ยวนี้</button></div></div>';
+    h+='<div class="card pad sm">'+
+      (S.bkOk===false?'<span style="color:var(--fail)">⚠ ตอนนี้ต่อ Google Sheet ไม่ได้ '+esc(S.bkErr)+'</span><br>ค่าที่กรอกเก็บไว้ในเครื่องก่อน เดี๋ยวส่งให้เองเมื่อต่อได้'
+        :'✅ ต่อกับ Google Sheet แล้ว กดบันทึกปุ๊บลงชีตปั๊บ · <a href="'+shLink+'" target="_blank" rel="noopener" style="color:var(--br)">เปิดชีต</a>')+
+      (S.queue.length?'<br>⏳ ค้างส่ง '+S.queue.length+' รายการ':'')+'</div>';
   } else
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">เชื่อม Google Sheets</div>'+
      '<div class="sm" style="margin-bottom:8px">ส่งผลที่บันทึกในแอปไปลงชีตกลางของโรงพยาบาล ไม่ต้องคัดลอกเอง</div>'+
@@ -867,9 +860,6 @@ function vSet(){
      '<div class="btn2" style="margin-top:10px"><button class="btn o" data-act="sheetcfg">ตั้งค่าชีต</button><button class="btn" data-act="sync">'+(S.syncing?'กำลังส่ง…':'ส่งขึ้นชีตเดี๋ยวนี้')+'</button></div></div>';
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">ธีมการแสดงผล</div><div class="tog">'+
      [['auto','ตามเครื่อง'],['light','สว่าง'],['dark','มืด']].map(x=>'<button data-act="setth" data-v="'+x[0]+'" class="'+(S.theme===x[0]?'on':'')+'">'+x[1]+'</button>').join('')+'</div></div>';
-  h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">รหัสผ่าน</div>'+
-     '<div class="sm" style="margin-bottom:10px">กันคนที่ได้ลิงก์ไปแก้ค่าเล่น · ใช้ตอนเข้าหน้าบันทึกค่าและหน้าตั้งค่า (หน้าสรุป/รายงานเปิดดูได้เลย) · ล็อกเองอัตโนมัติเมื่อไม่ได้ใช้งาน 15 นาที หรือกดปุ่มกุญแจมุมขวาบน</div>'+
-     '<button class="btn o" data-act="chpin">เปลี่ยนรหัส</button></div>';
   const nx=Math.max(SEED.CUR,...Object.keys(S.rounds).map(Number))+1;
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">รอบการตรวจวัด</div>'+
      '<div class="sm" style="margin-bottom:8px">เปิดรอบปีใหม่ = ยกทะเบียนจุดทั้งหมดมาตั้งต้น แล้วเดินวัดทีละจุด จุดไหนย้าย/ยุบค่อยกดระบุตอนวัด</div>'+
