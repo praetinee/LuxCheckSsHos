@@ -175,6 +175,12 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
 .sb .tr{display:flex;height:9px;border-radius:99px;overflow:hidden;background:var(--c-none)}
 .sb .tr i{display:block;height:100%}
 .ur{padding:2px 0}
+.kpi button{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 6px;text-align:center;box-shadow:var(--sh);width:100%}
+.kpi button.kpion{border-color:var(--fail)}
+.kpi button b{display:block;font-size:clamp(1.05rem,4.4vw,1.3rem);line-height:1.15}
+.kpi button span{font-size:.66rem;color:var(--mut)}
+.frow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:9px 0;border-bottom:1px solid var(--line)}
+.frow .n{flex:1;min-width:0;font-size:.88rem;font-weight:600}
 .ur .lb b{font-weight:600}
 .hist{display:flex;align-items:flex-end;gap:3px;height:120px;padding-top:6px}
 .hist .cl{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px}
@@ -253,13 +259,14 @@ async function bkPost(body){
 const S={
   year:SEED.CUR, view:'home', secIdx:null, q:'', q2:'', q3:'', filter:'all',
   readings:{}, prev:{}, custom:{}, edits:{}, std:Object.assign({},SEED.STD),
-  rounds:{}, csec:{}, names:{}, db:null, user:null, dl:null, mcp:null, uid:null, sfilter:null, unitAll:false,
+  rounds:{}, csec:{}, names:{}, db:null, user:null, dl:null, mcp:null, uid:null, sfilter:null, unitAll:false, failPanel:false, fsec:null,
   visits:null, visitsAgg:null, localVisit:{count:0,first:'',last:''}, booted:false, hideDone:true,
   bkOk:null, bkErr:'', flushing:false, lastLoad:'',
   add:null,
   entry:null, queue:[], logq:[], loading:true, theme:'auto', sheet:Object.assign({},SHEET), autosync:true,
   pin:'0000', unlocked:false, gate:null, syncing:false, lastSync:''
 };
+try{ const y=+(localStorage.getItem(LS+'_year')||0); if(y&&(SEED.BASE_YEARS.includes(y)||y>=SEED.CUR)) S.year=y }catch(e){}
 try{ S.unlocked=sessionStorage.getItem(LS+'_unl')==='1' }catch(e){}
 try{ const t=+(sessionStorage.getItem(LS+'_unlt')||0); if(S.unlocked&&t&&Date.now()-t>15*60*1000) S.unlocked=false }catch(e){}
 if(!S.unlocked) S.view='sum';
@@ -815,6 +822,23 @@ function vSumOverview(){
   h+=unitCard();
   return h;
 }
+function failByUnit(){
+  const g={};
+  livePoints().forEach(p=>{ const r=reading(p);
+    if(r&&r.lux!=null&&verdict(p,r.lux)==='fail'){ (g[p.secIdx]=g[p.secIdx]||[]).push(p) } });
+  const keys=Object.keys(g).sort((a,b)=>g[b].length-g[a].length);
+  if(!keys.length) return '<div class="card"><div class="empty">ยังไม่มีจุดที่ไม่ผ่านเกณฑ์</div></div>';
+  let h='<div class="card pad"><div style="font-weight:700;margin-bottom:2px">จุดที่ไม่ผ่านเกณฑ์ แยกตามหน่วยงาน</div>'+
+    '<div class="sm" style="margin-bottom:6px">แตะชื่อหน่วยงานเพื่อดูว่าเป็นจุดไหนบ้าง</div>';
+  keys.forEach(k=>{
+    const key=parseSec(k), ps=g[k], open=String(S.fsec)===String(k);
+    h+='<button class="frow" data-act="fsec" data-v="'+esc(k)+'">'+
+      '<span class="n">'+esc(secName(key))+'<div class="sm" style="font-size:.68rem">'+esc(bldName(key))+'</div></span>'+
+      '<span class="chip f">'+ps.length+' จุด</span><span style="color:var(--faint)">'+(open?'▲':'▼')+'</span></button>';
+    if(open) h+='<div style="margin:2px 0 10px">'+plistYears(ps,false)+'</div>';
+  });
+  return h+'</div>';
+}
 function unitRows(){
   const m={};
   livePoints().forEach(p=>{
@@ -860,7 +884,9 @@ function vSum(){
   const all=livePoints(), st=stats(all);
   let h=header()+'<div class="wrap">';
   h+='<div class="kpi"><div><b>'+st.n+'</b><span>จุดทั้งหมด</span></div><div><b class="vp">'+st.pass+'</b><span>ผ่าน</span></div>'+
-     '<div><b class="vf">'+st.fail+'</b><span>ไม่ผ่าน</span></div><div><b>'+st.rate+'%</b><span>อัตราผ่าน</span></div></div>';
+     '<button data-act="failpanel" class="'+(S.failPanel?'kpion':'')+'"><b class="vf">'+st.fail+'</b><span>ไม่ผ่าน '+(S.failPanel?'▲':'▼')+'</span></button>'+
+     '<div><b>'+st.rate+'%</b><span>อัตราผ่าน</span></div></div>';
+  if(S.failPanel) h+=failByUnit();
   h+=searchBox('q3',S.q3,'ค้นหาจุด / ชื่อคน / ห้อง / อาคาร');
   if(S.q3.trim()){
     const f=all.filter(p=>match(p,S.q3)), fs=stats(f);
@@ -1090,6 +1116,8 @@ document.addEventListener('click',ev=>{
   if(a==='nav'){ if(v==='sum'){S.view='sum';S.secIdx=null;S.entry=null;render()} else requireUnlock(()=>{S.view=v;S.secIdx=null;S.entry=null;render()}) }
   else if(a==='sec'){ S.secIdx=parseSec(v); S.view='sec'; S.q2=''; render() }
   else if(a==='home'){ S.view='home'; S.secIdx=null; render() }
+  else if(a==='failpanel'){ S.failPanel=!S.failPanel; S.fsec=null; render() }
+  else if(a==='fsec'){ S.fsec=(String(S.fsec)===String(v))?null:v; render() }
   else if(a==='unit'){ const k=parseSec(v); S.sfilter=(S.sfilter===k?null:k); render() }
   else if(a==='unitall'){ S.unitAll=!S.unitAll; render() }
   else if(a==='filter'){ S.filter=v; render() }
@@ -1170,12 +1198,18 @@ document.addEventListener('click',ev=>{
   }
   else if(a==='newround'){
     S.rounds[v]={year:+v,openedAt:new Date().toISOString(),by:S.uid||''};
-    put('rounds',String(v),S.rounds[v]); S.year=+v; loadMirror(); subYear(S.year); render(); toast('เปิดรอบปี '+v+' แล้ว');
+    put('rounds',String(v),S.rounds[v]); S.year=+v;
+    try{ localStorage.setItem(LS+'_year',String(S.year)) }catch(e){}
+    loadMirror(); subYear(S.year); render(); toast('เปิดรอบปี '+v+' แล้ว');
   }
 });
 document.addEventListener('change',ev=>{
   const b=ev.target.closest('[data-act]'); if(!b) return;
-  if(b.dataset.act==='year'){ S.year=+b.value; S.entry=null; loadMirror(); subYear(S.year); render() }
+  if(b.dataset.act==='year'){
+    S.year=+b.value; S.entry=null; S.sfilter=null; S.fsec=null;
+    try{ localStorage.setItem(LS+'_year',String(S.year)) }catch(e){}
+    loadMirror(); subYear(S.year); render();
+  }
   else if(b.dataset.act==='std'){
     const w=b.dataset.v,n=parseInt(b.value,10); if(isNaN(n))return;
     S.std[w]=n; _ck=''; try{localStorage.setItem(LS+'_std',JSON.stringify(S.std))}catch(e){}
