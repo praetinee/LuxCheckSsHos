@@ -241,7 +241,7 @@ async function bkPost(body){
 const S={
   year:SEED.CUR, view:'home', secIdx:null, q:'', q2:'', q3:'', filter:'all',
   readings:{}, prev:{}, custom:{}, edits:{}, std:Object.assign({},SEED.STD),
-  rounds:{}, names:{}, db:null, user:null, dl:null, mcp:null, uid:null, sfilter:null, unitAll:false,
+  rounds:{}, csec:{}, names:{}, db:null, user:null, dl:null, mcp:null, uid:null, sfilter:null, unitAll:false,
   visits:null, visitsAgg:null, localVisit:{count:0,first:'',last:''}, booted:false, hideDone:true,
   bkOk:null, bkErr:'', flushing:false, lastLoad:'',
   add:null,
@@ -249,6 +249,7 @@ const S={
   pin:'0000', unlocked:false, gate:null, syncing:false, lastSync:''
 };
 try{ S.unlocked=sessionStorage.getItem(LS+'_unl')==='1' }catch(e){}
+try{ const t=+(sessionStorage.getItem(LS+'_unlt')||0); if(S.unlocked&&t&&Date.now()-t>15*60*1000) S.unlocked=false }catch(e){}
 if(!S.unlocked) S.view='sum';
 
 /* ---------- theme ---------- */
@@ -284,14 +285,24 @@ function loadMirror(){
 }
 
 /* ---------- points ---------- */
-function secName(i){ const s=SEED.SECS[i]; return s?s[0]:'ไม่ระบุ' }
-function bldName(i){ const s=SEED.SECS[i]; return s?s[1]:'อื่นๆ' }
+function secRec(i){
+  if(typeof i==='string'&&S.csec[i]) { const c=S.csec[i]; return [c.name,c.bld||c.name,c.floor||'',c.zone||''] }
+  return SEED.SECS[i]||null;
+}
+function secName(i){ const s=secRec(i); return s?s[0]:'ไม่ระบุ' }
+function bldName(i){ const s=secRec(i); return s?s[1]:'อื่นๆ' }
+function allSecs(){
+  const out=SEED.SECS.map((s,i)=>({i:i,s:s}));
+  Object.keys(S.csec).sort().forEach(id=>out.push({i:id,s:secRec(id)}));
+  return out;
+}
+function parseSec(v){ return /^[0-9]+$/.test(String(v))?+v:String(v) }
 function basePoints(){
   return SEED.PTS.map(p=>({pid:pad3(p[0]),no:p[0],secIdx:p[1],name:p[2],work:p[3],l68:p[4],l69:p[5],hint:p[6]||'',custom:false}));
 }
 let _ck='',_cp=null;
 function points(){
-  const key=S.year+'|'+Object.keys(S.custom).sort().join()+'|'+JSON.stringify(S.edits)+'|'+JSON.stringify(S.std);
+  const key=S.year+'|'+Object.keys(S.custom).sort().join()+'|'+Object.keys(S.csec).sort().join()+'|'+JSON.stringify(S.edits)+'|'+JSON.stringify(S.std);
   if(key===_ck&&_cp) return _cp;
   const out=basePoints();
   Object.keys(S.custom).forEach(pid=>{
@@ -354,13 +365,15 @@ async function boot(){
     flush(); setInterval(flush,20000);
     setInterval(()=>{ if(!document.hidden&&!S.entry&&!S.queue.length) bkLoad(true) },60000);
     document.addEventListener('visibilitychange',()=>{ if(!document.hidden){ flush(); bkLoad(true) } });
-    window.addEventListener('pagehide',()=>{ flush() });
+    window.addEventListener('pagehide',()=>{ flush(); });
+    document.addEventListener('visibilitychange',()=>{ if(document.hidden&&S.dirtySince) rebuildMain(true) });
     render(); return;
   }
   if(!db){ S.loading=false; render(); return }
   const to=setTimeout(()=>{ if(S.loading){S.loading=false;render()} },10000);
   const clear=()=>{ clearTimeout(to); if(S.loading){S.loading=false;render()} };
   subYear(S.year,clear);
+  db.collection('customsecs').onSnapshot(s=>{ S.csec={}; s.docs.forEach(d=>S.csec[d.id]=d.data()); _ck=''; render() },()=>{});
   db.collection('custompoints').onSnapshot(s=>{ S.custom={}; s.docs.forEach(d=>S.custom[d.id]=d.data()); _ck=''; render() },()=>{});
   db.collection('pointedits').onSnapshot(s=>{ S.edits={}; s.docs.forEach(d=>S.edits[d.id]=d.data()); _ck=''; render() },()=>{});
   db.collection('rounds').onSnapshot(s=>{ S.rounds={}; s.docs.forEach(d=>S.rounds[d.id]=d.data()); render() },()=>{});
@@ -385,6 +398,7 @@ async function bkLoad(silent){
     S.readings=Object.assign({},j.rows||{},pendingFor(S.year));
     S.prev=j.prev||{};
     S.custom={}; (j.points||[]).forEach(p=>{ S.custom[p.pid]=p });
+    S.csec={}; (j.secs||[]).forEach(c=>{ S.csec[c.id]=c });
     if(j.std&&Object.keys(j.std).length) S.std=Object.assign({},SEED.STD,j.std);
     if(j.visits) S.visitsAgg=j.visits;
     S.bkOk=true; S.bkErr=''; S.lastLoad=new Date().toISOString(); _ck=''; mirror(); render();
@@ -420,6 +434,7 @@ async function put(coll,id,body,y){
   const yy=y||S.year;
   if(bkOn()){
     if(coll==='readings'){ queue(coll,id,body,yy); flush(); return true }
+    if(coll==='customsecs'){ try{ await bkPost({action:'addsec',id:body.id,name:body.name,bld:body.bld,floor:body.floor,year:body.year}) }catch(e){ toast('เพิ่มหมวดลงชีตไม่สำเร็จ') } return true }
     if(coll==='custompoints'){ try{ await bkPost({action:'addpoint',pid:body.pid,secIdx:body.secIdx,secName:secName(body.secIdx),name:body.name,work:body.work,year:body.year}) }catch(e){ toast('เพิ่มจุดลงชีตไม่สำเร็จ ลองใหม่อีกครั้ง') } return true }
     if(coll==='settings'&&id==='standards'){ try{ await bkPost({action:'setstd',map:body.map}) }catch(e){} return true }
     return true;
@@ -508,7 +523,23 @@ function visitCard(){
 function toast(m){ const t=$('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),2200) }
 
 /* ---------- lock ---------- */
-function setUnlocked(v){ S.unlocked=v; try{ v?sessionStorage.setItem(LS+'_unl','1'):sessionStorage.removeItem(LS+'_unl') }catch(e){} }
+const LOCK_IDLE=15*60*1000;   // ไม่แตะหน้าจอเกิน 15 นาที = ล็อกอีกครั้ง
+function setUnlocked(v){
+  S.unlocked=v;
+  try{
+    if(v){ sessionStorage.setItem(LS+'_unl','1'); sessionStorage.setItem(LS+'_unlt',String(Date.now())) }
+    else { sessionStorage.removeItem(LS+'_unl'); sessionStorage.removeItem(LS+'_unlt') }
+  }catch(e){}
+}
+function touchLock(){ if(S.unlocked){ try{ sessionStorage.setItem(LS+'_unlt',String(Date.now())) }catch(e){} } }
+function checkLock(){
+  if(!S.unlocked) return;
+  let t=0; try{ t=+(sessionStorage.getItem(LS+'_unlt')||0) }catch(e){}
+  if(t&&Date.now()-t>LOCK_IDLE){
+    setUnlocked(false);
+    if(S.view!=='sum'){ S.view='sum'; S.entry=null; render(); toast('ล็อกอัตโนมัติ — ไม่ได้ใช้งานเกิน 15 นาที') }
+  }
+}
 function requireUnlock(fn){ if(S.unlocked){fn();return} S.gate={fn:fn,buf:'',err:false,mode:'open'}; renderPin() }
 function renderPin(){
   const g=S.gate; if(!g){ $('mdl').innerHTML=''; return }
@@ -549,7 +580,7 @@ async function callSheet(tool,input){
 }
 function sheetRows(){
   const out=[];
-  SEED.SECS.forEach((s,i)=>{
+  allSecs().forEach(({i,s})=>{
     bySec(i).forEach(p=>{
       const r=reading(p)||{}, v=r.lux!=null?verdict(p,r.lux):null;
       out.push([p.custom?'ใหม่':p.no, s[1]+(s[2]?' ชั้น '+s[2]:''), s[3]||s[0], p.name, p.work, p.std,
@@ -592,8 +623,16 @@ async function syncSheet(silent){
 }
 let syncT=null;
 function queueSync(){
+  if(bkOn()){ clearTimeout(syncT); syncT=setTimeout(()=>rebuildMain(true),60000); return }
   if(!S.autosync||!sheetReady()) return;
   clearTimeout(syncT); syncT=setTimeout(()=>syncSheet(true),45000);
+}
+async function rebuildMain(silent){
+  if(!bkOn()||S.syncing) return;
+  S.syncing=true; if(!silent) render();
+  try{ await flush(); await bkPost({action:'rebuild',rows:sheetRows().filter(r=>r[3]!=='')}); S.lastRebuild=new Date().toISOString(); }
+  catch(e){ if(!silent) toast('อัปเดตตารางสรุปไม่สำเร็จ') }
+  S.syncing=false; render();
 }
 
 /* ---------- views ---------- */
@@ -608,6 +647,7 @@ function header(){
       :(bkOn()?(S.bkOk===false?' · <span class="sync">⚠ ต่อชีตไม่ได้</span>':' · <span class="sync">✓ บันทึกลงชีตแล้ว</span>')
        :(S.db?' · <span class="sync">✓ บันทึกอัตโนมัติ</span>':' · <span class="sync">⚠ เครื่องนี้เท่านั้น</span>')))+
     (!bkOn()&&sheetReady()&&S.logq.length?' · <span class="sync">📗 รอส่งชีต '+S.logq.length+'</span>':'')+'</div></div>'+
+    '<button class="thbtn" data-act="'+(S.unlocked?'lock':'unlockbtn')+'" title="'+(S.unlocked?'ล็อกระบบ':'ปลดล็อกเพื่อบันทึกค่า')+'">'+(S.unlocked?'🔓':'🔒')+'</button>'+
     '<button class="thbtn" data-act="theme" title="สลับธีม">'+ic+'</button>'+
     '<select class="ysel" data-act="year">'+yearOpts().map(y=>'<option value="'+y+'"'+(y===S.year?' selected':'')+'>ปี '+y+'</option>').join('')+'</select>'+
     '</div></div>';
@@ -658,7 +698,7 @@ function vHome(){
     h+='<div class="tog">'+[['all','ทุกหมวด'],['todo','ยังไม่วัด'],['fail','ไม่ผ่านเกณฑ์']]
       .map(x=>'<button data-act="filter" data-v="'+x[0]+'" class="'+(S.filter===x[0]?'on':'')+'">'+x[1]+'</button>').join('')+'</div>';
     h+='<div class="seclist"><div class="card gl">';
-    SEED.SECS.forEach((s,i)=>{
+    allSecs().forEach(({i,s})=>{
       const ps=bySec(i); if(!ps.length) return;
       const t=stats(ps);
       if(S.filter==='todo'&&t.done>=t.n) return;
@@ -675,7 +715,7 @@ function vHome(){
   return h+'</div>'+nav('home');
 }
 function vSec(){
-  const i=S.secIdx,s=SEED.SECS[i]||['',''],all=bySec(i),ps=all.filter(p=>match(p,S.q2)),t=stats(all);
+  const i=S.secIdx,s=secRec(i)||['',''],all=bySec(i),ps=all.filter(p=>match(p,S.q2)),t=stats(all);
   let h=header()+'<div class="wrap">';
   h+='<div class="card pad"><button data-act="home" class="sm" style="margin-bottom:6px">‹ ทุกหมวด</button>'+
      '<div style="font-weight:700">'+esc(s[0])+'</div><div class="sm">วัดแล้ว '+t.done+'/'+t.n+' · ผ่าน '+t.pass+' · ไม่ผ่าน '+t.fail+'</div>'+
@@ -727,7 +767,7 @@ function vSumOverview(){
 function unitRows(){
   const m={};
   livePoints().forEach(p=>{
-    const i=p.secIdx,s=SEED.SECS[i]||['','','',''];
+    const i=p.secIdx,s=secRec(i)||['','','',''];
     const u=m[i]||(m[i]={i:i,name:s[3]||s[0],bld:s[1]+(s[2]?' ชั้น '+s[2]:''),n:0,lo:0,mid:0,hi:0,todo:0});
     u.n++;
     const r=reading(p);
@@ -809,8 +849,10 @@ function vSet(){
       (S.queue.length?'<br>⏳ ค้างส่ง '+S.queue.length+' รายการ':'')+
       (S.lastLoad?'<br>อ่านข้อมูลล่าสุด '+new Date(S.lastLoad).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})+' น.':'')+
       '<br><a href="'+shLink+'" target="_blank" rel="noopener" style="color:var(--br)">เปิดชีต</a></div>'+
+      '<div class="sm" style="margin-bottom:8px">แท็บ “สรุปปีปัจจุบัน” จะถูกจัดใหม่ให้เองหลังหยุดกรอก 1 นาที และตอนปิดหน้า '+
+      (S.syncing?'· <b>กำลังอัปเดต…</b>':'')+'</div>'+
       '<div class="btn2"><button class="btn o" data-act="bkcfg">ตั้งค่าการเชื่อมต่อ</button>'+
-      '<button class="btn" data-act="sync">'+(S.syncing?'กำลังอัปเดต…':'อัปเดตตารางสรุป')+'</button></div></div>';
+      '<button class="btn o" data-act="sync">อัปเดตตารางสรุปเดี๋ยวนี้</button></div></div>';
   } else
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">เชื่อม Google Sheets</div>'+
      '<div class="sm" style="margin-bottom:8px">ส่งผลที่บันทึกในแอปไปลงชีตกลางของโรงพยาบาล ไม่ต้องคัดลอกเอง</div>'+
@@ -826,8 +868,8 @@ function vSet(){
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">ธีมการแสดงผล</div><div class="tog">'+
      [['auto','ตามเครื่อง'],['light','สว่าง'],['dark','มืด']].map(x=>'<button data-act="setth" data-v="'+x[0]+'" class="'+(S.theme===x[0]?'on':'')+'">'+x[1]+'</button>').join('')+'</div></div>';
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">รหัสผ่าน</div>'+
-     '<div class="sm" style="margin-bottom:10px">ใช้ตอนเข้าหน้าบันทึกค่าและหน้าตั้งค่า (หน้าสรุป/รายงานเปิดดูได้โดยไม่ต้องใส่รหัส)</div>'+
-     '<div class="btn2"><button class="btn o" data-act="chpin">เปลี่ยนรหัส</button><button class="btn r" data-act="lock">🔒 ล็อกตอนนี้</button></div></div>';
+     '<div class="sm" style="margin-bottom:10px">กันคนที่ได้ลิงก์ไปแก้ค่าเล่น · ใช้ตอนเข้าหน้าบันทึกค่าและหน้าตั้งค่า (หน้าสรุป/รายงานเปิดดูได้เลย) · ล็อกเองอัตโนมัติเมื่อไม่ได้ใช้งาน 15 นาที หรือกดปุ่มกุญแจมุมขวาบน</div>'+
+     '<button class="btn o" data-act="chpin">เปลี่ยนรหัส</button></div>';
   const nx=Math.max(SEED.CUR,...Object.keys(S.rounds).map(Number))+1;
   h+='<div class="card pad"><div style="font-weight:700;margin-bottom:6px">รอบการตรวจวัด</div>'+
      '<div class="sm" style="margin-bottom:8px">เปิดรอบปีใหม่ = ยกทะเบียนจุดทั้งหมดมาตั้งต้น แล้วเดินวัดทีละจุด จุดไหนย้าย/ยุบค่อยกดระบุตอนวัด</div>'+
@@ -917,7 +959,7 @@ async function saveEntry(advance){
   mirror();
   if(e.status==='removed'){ const ed=Object.assign({},S.edits[p.pid]||{},{retiredYear:S.year}); S.edits[p.pid]=ed; _ck=''; put('pointedits',p.pid,ed) }
   if(!S.rounds[S.year]&&!SEED.BASE_YEARS.includes(S.year)){ S.rounds[S.year]={year:S.year,openedAt:new Date().toISOString()}; put('rounds',String(S.year),S.rounds[S.year]) }
-  put('readings',p.pid,body); queueSync();
+  put('readings',p.pid,body); S.dirtySince=Date.now(); queueSync();
   if(advance){
     let n=e.i+1;
     while(n<e.list.length){ const q=livePoints().find(x=>x.pid===e.list[n]); if(q&&!reading(q)) break; n++ }
@@ -930,13 +972,13 @@ async function saveEntry(advance){
 /* ---------- modals / export ---------- */
 function closeMdl(){ $('mdl').innerHTML='' }
 function addPointModal(){
-  S.add={sec:(S.secIdx!=null?S.secIdx:null),q1:'',name:'',work:'',q2:'',focus:''};
+  S.add={sec:(S.view==='sec'&&S.secIdx!=null?S.secIdx:null),q1:'',name:'',work:'',q2:'',focus:''};
   renderAdd();
 }
 function renderAdd(){
   const a=S.add; if(!a){ $('mdl').innerHTML=''; return }
   const q1=a.q1.trim().toLowerCase();
-  const secs=SEED.SECS.map((s,i)=>({i:i,t:s[0]}))
+  const secs=allSecs().map(x=>({i:x.i,t:x.s[0]}))
     .filter(x=>!q1||x.t.toLowerCase().includes(q1)).slice(0,q1?8:6);
   const q2=a.q2.trim().toLowerCase();
   const works=Object.keys(S.std).sort((x,y)=>x.localeCompare(y,'th'))
@@ -945,8 +987,10 @@ function renderAdd(){
   h+='<div class="fld"><label>หมวด / พื้นที่</label>'+
     (a.sec!=null?'<div class="pkd"><span>'+esc(secName(a.sec))+'</span><button data-act="apclr1">เปลี่ยน</button></div>'
       :'<input data-act="apq1" placeholder="พิมพ์ค้นหา เช่น โภชน, แสงเดือน ชั้น 3, OPD" value="'+esc(a.q1)+'">'+
-       '<div class="pk">'+(secs.length?secs.map(x=>'<button data-act="apsec" data-v="'+x.i+'">'+esc(x.t)+'</button>').join('')
-         :'<span class="sm" style="padding:6px">ไม่พบหมวดที่ค้นหา</span>')+'</div>')+'</div>';
+       '<div class="pk">'+secs.map(x=>'<button data-act="apsec" data-v="'+x.i+'">'+esc(x.t)+'</button>').join('')+
+       (a.q1.trim()&&!secs.some(x=>x.t===a.q1.trim())
+         ?'<button data-act="apnewsec" data-v="'+esc(a.q1.trim())+'">+ เพิ่มหมวด/หน่วยงานใหม่ “'+esc(a.q1.trim())+'”</button>':'')+
+       '</div>')+'</div>';
   h+='<div class="fld"><label>ชื่อจุดตรวจวัด</label><input data-act="apname" placeholder="ชื่อจุด" value="'+esc(a.name)+'"></div>';
   h+='<div class="fld"><label>ลักษณะงาน</label>'+
     (a.work?'<div class="pkd"><span>'+esc(a.work)+' <span class="sm">(เกณฑ์ ≥'+(S.std[a.work]||400)+' Lux)</span></span><button data-act="apclr2">เปลี่ยน</button></div>'
@@ -1004,9 +1048,9 @@ document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]'); if(!b) return;
   const a=b.dataset.act,v=b.dataset.v;
   if(a==='nav'){ if(v==='sum'){S.view='sum';S.secIdx=null;S.entry=null;render()} else requireUnlock(()=>{S.view=v;S.secIdx=null;S.entry=null;render()}) }
-  else if(a==='sec'){ S.secIdx=+v; S.view='sec'; S.q2=''; render() }
+  else if(a==='sec'){ S.secIdx=parseSec(v); S.view='sec'; S.q2=''; render() }
   else if(a==='home'){ S.view='home'; S.secIdx=null; render() }
-  else if(a==='unit'){ S.sfilter=S.sfilter===+v?null:+v; render() }
+  else if(a==='unit'){ const k=parseSec(v); S.sfilter=(S.sfilter===k?null:k); render() }
   else if(a==='unitall'){ S.unitAll=!S.unitAll; render() }
   else if(a==='filter'){ S.filter=v; render() }
   else if(a==='clr'){ S[v]=''; render() }
@@ -1024,7 +1068,14 @@ document.addEventListener('click',ev=>{
   else if(a==='addpt'){ addPointModal() }
   else if(a==='mclose'){ S.add=null; closeMdl() }
   else if(a==='hidedone'){ S.hideDone=!S.hideDone; try{localStorage.setItem(LS+'_hide',S.hideDone?'1':'0')}catch(e){} render() }
-  else if(a==='apsec'){ S.add.sec=+v; S.add.q1=''; S.add.focus='apname'; renderAdd() }
+  else if(a==='apsec'){ S.add.sec=parseSec(v); S.add.q1=''; S.add.focus='apname'; renderAdd() }
+  else if(a==='apnewsec'){
+    const nm=v.trim(); if(!nm) return;
+    const id='S'+Date.now().toString(36);
+    const rec={id:id,name:nm,bld:nm,floor:'',zone:nm,year:S.year,at:new Date().toISOString()};
+    S.csec[id]=rec; _ck=''; put('customsecs',id,rec);
+    S.add.sec=id; S.add.q1=''; S.add.focus='apname'; renderAdd(); toast('เพิ่มหมวด “'+nm+'” แล้ว');
+  }
   else if(a==='apclr1'){ S.add.sec=null; S.add.focus='apq1'; renderAdd() }
   else if(a==='apwork'){ S.add.work=v; S.add.q2=''; S.add.focus=''; renderAdd() }
   else if(a==='apclr2'){ S.add.work=''; S.add.focus='apq2'; renderAdd() }
@@ -1036,6 +1087,7 @@ document.addEventListener('click',ev=>{
     if(!S.std[ad.work]){ S.std[ad.work]=400; _ck=''; put('settings','standards',{map:S.std,at:new Date().toISOString()}) }
     const pid='C'+Date.now().toString(36);
     const c={pid:pid,secIdx:ad.sec,name:nm,work:ad.work,year:S.year,by:S.uid||'',at:new Date().toISOString()};
+    const nsec=ad.sec;
     S.add=null;
     S.custom[pid]=c; _ck=''; put('custompoints',pid,c); closeMdl(); render();
     openEntry(pid,bySec(c.secIdx)); S.entry.status='new'; renderEntry(); toast('เพิ่มจุดแล้ว — ใส่ค่าแสงได้เลย');
@@ -1066,6 +1118,7 @@ document.addEventListener('click',ev=>{
   else if(a==='pbs'){ if(S.gate){S.gate.buf=S.gate.buf.slice(0,-1);S.gate.err=false;renderPin()} }
   else if(a==='pcancel'){ S.gate=null; closeMdl() }
   else if(a==='chpin'){ S.gate={mode:'change',step:'old',buf:'',err:false}; renderPin() }
+  else if(a==='unlockbtn'){ requireUnlock(()=>{ S.view='home'; render() }) }
   else if(a==='lock'){ setUnlocked(false); S.view='sum'; S.entry=null; render(); toast('ล็อกแล้ว') }
   else if(a==='stdm'||a==='stdp'){
     const w=b.dataset.v,n=Math.max(50,(S.std[w]||400)+(a==='stdp'?50:-50));
@@ -1114,6 +1167,9 @@ document.addEventListener('keydown',ev=>{
   else if(ev.key==='ArrowRight'){ moveTo(S.entry.i+1) }
 });
 window.addEventListener('resize',()=>{ if(S.entry) renderEntry() });
+['click','keydown'].forEach(ev=>document.addEventListener(ev,touchLock,true));
+setInterval(checkLock,60000);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) checkLock() });
 boot();
 </script>
 </body>
