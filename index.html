@@ -682,7 +682,7 @@ function plistYears(ps,showSec){
   let h='<div class="card gl">';
   ps.forEach(p=>{
     const rows=yearsOf(p).map(([y,v,st])=>{
-      let val='<b class="vn">ยังไม่ได้วัด</b>';
+      let val=(y===S.year&&!roYear())?'<b class="vn">ยังไม่ได้วัด</b>':'<b class="vn">–</b>';
       if(st==='skip') val='<b class="vn">ไม่ได้วัด</b>';
       else if(st==='removed') val='<b class="vn">ยุบจุด</b>';
       else if(v!=null) val='<b class="'+(v>=p.std?'vp':'vf')+'">'+v+' <span class="sm" style="font-weight:400">Lux</span></b>';
@@ -959,7 +959,7 @@ function renderEntry(){
     (r&&r.by&&r.by!==S.uid?'<span class="chip">บันทึกโดย '+esc(S.names[r.by]||'เพื่อนร่วมทีม')+'</span>':'')+'</div></div>'+
     '<div class="disp"><div class="big" style="color:'+col+'">'+(e.buf===''?'<span style="color:var(--faint)">0</span>':esc(e.buf))+'<span class="u">Lux</span></div>'+
     '<div class="vd">'+vd+'</div><div class="hist">'+hist+'</div></div><div class="pad">'+
-    (ro?'<div class="sm" style="text-align:center;padding:8px">ปีย้อนหลัง — ดูได้เท่านั้น</div>':
+    (ro?'':
       '<div class="stat">'+Object.keys(STAT).map(k=>'<button data-act="st" data-v="'+k+'" class="'+(e.status===k?'on'+(k==='removed'?' rm':''):'')+'">'+STAT[k]+'</button>').join('')+'</div>'+
       (e.status==='moved'?'<input class="nt" placeholder="ตำแหน่งใหม่ เช่น ย้ายมากลางห้อง / ริมหน้าต่าง" value="'+esc(e.loc)+'" data-act="loc">':'')+
       (e.noteOpen||e.note?'<input class="nt" placeholder="หมายเหตุ เช่น ปิดไฟ 1 ดวง, เปิดผ้าม่าน" value="'+esc(e.note)+'" data-act="note">':
@@ -1085,7 +1085,10 @@ document.addEventListener('click',ev=>{
   else if(a==='unitall'){ S.unitAll=!S.unitAll; render() }
   else if(a==='filter'){ S.filter=v; render() }
   else if(a==='clr'){ S[v]=''; render() }
-  else if(a==='open'){ const l=S.view==='sec'?bySec(S.secIdx):null; requireUnlock(()=>openEntry(v,l)) }
+  else if(a==='open'){
+    if(roYear()) return;                       // ปีย้อนหลัง: ดูในรายการได้เลย ไม่ต้องเปิดการ์ด
+    const l=S.view==='sec'?bySec(S.secIdx):null; requireUnlock(()=>openEntry(v,l));
+  }
   else if(a==='start'){ const ps=bySec(S.secIdx),t=ps.find(p=>!reading(p)); t?openEntry(t.pid,ps):toast('วัดครบแล้ว') }
   else if(a==='close'){ S.entry=null; render() }
   else if(a==='k'){ const e=S.entry; if(v==='.'&&e.buf.includes('.'))return; if(e.buf.replace('.','').length>6)return; e.buf+=v; renderEntry() }
