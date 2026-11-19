@@ -77,6 +77,12 @@ input::placeholder,textarea::placeholder{color:var(--faint)}
 .prow .val{flex:0 0 78px;text-align:right}
 .prow .val b{font-size:1.08rem;display:block;line-height:1.1}
 .prow .val s{display:block;font-size:.65rem;color:var(--mut);text-decoration:none}
+.yrow{align-items:flex-start}
+.yrow .t{margin-bottom:4px}
+.yl{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:.84rem;
+  padding:3px 0;border-top:1px solid var(--line);color:var(--mut)}
+.yl:first-of-type{margin-top:5px}
+.yl b{font-size:1rem;font-variant-numeric:tabular-nums}
 .vp{color:var(--pass)}.vf{color:var(--fail)}.vn{color:var(--mut)}
 .btn{display:block;width:100%;background:var(--br);color:var(--onbr);border-radius:13px;padding:14px;font-weight:700;text-align:center;box-shadow:var(--sh)}
 .btn.g{background:var(--pass);color:var(--onpass)}
@@ -661,6 +667,42 @@ function match(p,q){
   return (p.name||'').toLowerCase().includes(q)||secName(p.secIdx).toLowerCase().includes(q)||
          (p.work||'').toLowerCase().includes(q)||String(p.no).includes(q);
 }
+function yearsOf(p){
+  const out=[[2568,p.l68],[2569,p.l69]];
+  if(S.year>2569){
+    if(S.year>2570){ const pv=prevVal(p); out.push([S.year-1,pv.v]) }
+    const r=reading(p);
+    out.push([S.year,(r&&r.lux!=null)?r.lux:null,r?r.status:null]);
+  }
+  const seen={};
+  return out.filter(x=>{ if(seen[x[0]])return false; seen[x[0]]=1; return true });
+}
+function plistYears(ps,showSec){
+  if(!ps.length) return '<div class="card"><div class="empty">ไม่มีจุดตรวจในกลุ่มนี้</div></div>';
+  let h='<div class="card gl">';
+  ps.forEach(p=>{
+    const rows=yearsOf(p).map(([y,v,st])=>{
+      let val='<b class="vn">ยังไม่ได้วัด</b>';
+      if(st==='skip') val='<b class="vn">ไม่ได้วัด</b>';
+      else if(st==='removed') val='<b class="vn">ยุบจุด</b>';
+      else if(v!=null) val='<b class="'+(v>=p.std?'vp':'vf')+'">'+v+' <span class="sm" style="font-weight:400">Lux</span></b>';
+      return '<span class="yl"><span>ปี '+String(y).slice(-2)+'</span>'+val+'</span>';
+    }).join('');
+    const r=reading(p);
+    h+='<button class="prow yrow" data-act="open" data-v="'+p.pid+'">'+
+      '<span class="mid"><span class="t">'+esc(p.name)+'</span>'+
+      '<span class="m"><span class="chip">'+esc(p.work||'-')+'</span><span class="chip">เกณฑ์ ≥'+p.std+'</span>'+
+      (r&&r.status==='moved'?'<span class="chip w">ย้ายสถานีงาน</span>':'')+
+      (r&&r.status==='new'?'<span class="chip b">จุดใหม่</span>':'')+
+      (p.custom?'<span class="chip b">จุดเพิ่มใหม่</span>':'')+
+      (showSec?'<span class="chip">'+esc(secName(p.secIdx))+'</span>':'')+'</span>'+
+      rows+
+      (r&&r.note?'<span class="sm" style="display:block;margin-top:3px">📝 '+esc(r.note)+'</span>':'')+
+      (r&&r.loc?'<span class="sm" style="display:block">📍 '+esc(r.loc)+'</span>':'')+
+      '</span></button>';
+  });
+  return h+'</div>';
+}
 function plist(ps,showSec){
   if(!ps.length) return '<div class="card"><div class="empty">ไม่มีจุดตรวจในกลุ่มนี้</div></div>';
   let h='<div class="card gl">';
@@ -796,8 +838,7 @@ function unitCard(){
       '<div class="sm" style="font-size:.68rem;margin-top:3px">'+u.n+' จุด · ไม่พอ '+u.lo+' · ตามช่วง '+u.mid+' · สูงกว่า '+u.hi+(u.todo?' · ยังไม่วัด '+u.todo:'')+
       ' <span style="opacity:.6">· '+esc(u.bld)+'</span></div></button>';
     if(S.sfilter===u.i){
-      const ps=bySec(u.i);
-      h+='<div style="margin:2px 0 10px">'+plist(ps,false)+'</div>';
+      h+='<div style="margin:2px 0 10px">'+plistYears(bySec(u.i),false)+'</div>';
     }
     h+='</div>';
   });
@@ -814,7 +855,7 @@ function vSum(){
   h+=searchBox('q3',S.q3,'ค้นหาจุด / ชื่อคน / ห้อง / อาคาร');
   if(S.q3.trim()){
     const f=all.filter(p=>match(p,S.q3)), fs=stats(f);
-    h+='<div class="gh">ผลค้นหา '+f.length+' จุด</div>'+plist(f,true)+
+    h+='<div class="gh">ผลค้นหา '+f.length+' จุด</div>'+plistYears(f,true)+
       '<div class="card pad sm">ในผลค้นหานี้: วัดแล้ว '+fs.done+'/'+fs.n+' · <span class="vp">ผ่าน '+fs.pass+'</span> · <span class="vf">ไม่ผ่าน '+fs.fail+'</span></div>';
   }else{
     h+=vSumOverview();
